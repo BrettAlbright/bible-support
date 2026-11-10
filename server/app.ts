@@ -24,6 +24,21 @@ function isWriteMethod(method: string): boolean {
   return ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method);
 }
 
+/** Platform probes (Render health checks poll these every few seconds). */
+const RATE_LIMIT_EXEMPT_PATHS = new Set(['/api/health', '/api/ready']);
+
+/**
+ * True for health/readiness probes so they bypass the `/api` read limiter.
+ * Uses `baseUrl + path` because, when mounted via `app.use('/api', …)`,
+ * `req.path` is `/health` rather than `/api/health`.
+ */
+function isRateLimitExemptPath(req: express.Request): boolean {
+  const fullPath = `${req.baseUrl}${req.path}`
+    .replace(/\/+$/, '')
+    .toLowerCase();
+  return RATE_LIMIT_EXEMPT_PATHS.has(fullPath);
+}
+
 /** Build stable rate-limit identity from auth/session/device/ip context. */
 function resolveRateLimitKey(req: express.Request): string {
   if (req.authUserId) return `user:${req.authUserId}`;
@@ -52,7 +67,7 @@ export function createApp(): express.Express {
     max: env.RATE_LIMIT_MAX,
     standardHeaders: true,
     legacyHeaders: false,
-    skip: (req) => isWriteMethod(req.method),
+    skip: (req) => isWriteMethod(req.method) || isRateLimitExemptPath(req),
     keyGenerator: resolveRateLimitKey,
   });
   const apiWriteRateLimiter = rateLimit({

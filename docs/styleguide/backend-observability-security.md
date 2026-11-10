@@ -38,6 +38,8 @@ Configured in **`server/app.ts`** via **`RATE_LIMIT_WINDOW_MS`**, **`RATE_LIMIT_
 
 Use these from load balancers, deploy scripts, and first-line incident triage (see **`docs/development-workflow.md`** → Backend operations).
 
+Both routes **skip the `/api` read rate limiter** (`isRateLimitExemptPath` in **`server/app.ts`**), so frequent platform health checks (e.g. **Render**) are not counted toward **`RATE_LIMIT_MAX`** and cannot receive **429**.
+
 ## Security checklist (recurring)
 
 - **Helmet** + **CORS** + **`trust proxy`** settings remain appropriate after proxy or host changes (`server/app.ts`).

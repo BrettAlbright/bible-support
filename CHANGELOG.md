@@ -51,6 +51,7 @@ The format is inspired by Keep a Changelog and uses semantic-style version secti
 
 ### Fixed
 
+- **Rate limiting / Render health checks:** **`/api/health`** and **`/api/ready`** now skip the **`/api`** read rate limiter (via the limiter's **`skip`** option, matching on **`baseUrl + path`**), so frequent platform health checks no longer get **429** and use up the shared budget. Other **`/api`** routes stay limited; **`RATE_LIMIT_MAX`** / **`RATE_LIMIT_WINDOW_MS`** are unchanged. Vitest **`server/routes/api-rate-limit.test.ts`**.
 - Reader: chapter picker on small screens no longer defaults the `<select>` to chapter **1** when the chapter number field is empty while the loaded chapter is something else; URL sync for book/chapter/translation updates the query string only when those values change (preserves `verse` and other params). Hydration from the URL runs only when `searchParams` change so local book/chapter/translation changes are not overwritten by a stale query string before it updates. URL hydration uses functional `setState` only when parsed params differ, and the URL-write effect skips `setSearchParams` when the query already matches state, to avoid update churn that could freeze the tab.
 
 ### Documentation
